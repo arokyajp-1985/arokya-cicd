@@ -9,3 +9,5 @@ EXPOSE 80
 
 # Start NGINX in the foreground
 CMD ["nginx", "-g", "daemon off;"]
+
+

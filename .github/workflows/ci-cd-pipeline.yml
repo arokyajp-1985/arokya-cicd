@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # Uses the self-hosted runner on your local machine
 
     steps:
     - name: Checkout code
@@ -24,6 +24,16 @@ jobs:
         docker build -t arokyajp/arokya-cicd:latest .
         docker push arokyajp/arokya-cicd:latest
 
+    - name: Start Minikube (if not running)
+      run: |
+        minikube status || minikube start
+
+    - name: Configure kubectl to use Minikube
+      run: |
+        kubectl config use-context minikube
+        kubectl cluster-info
+
     - name: Deploy to Minikube
       run: |
+        kubectl apply -f deployment.yaml  # Ensure you have a proper Kubernetes YAML file
         kubectl rollout restart deployment my-website
