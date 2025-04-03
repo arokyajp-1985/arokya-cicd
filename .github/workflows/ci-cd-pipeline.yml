@@ -35,5 +35,5 @@ jobs:
 
     - name: Deploy to Minikube
       run: |
-        kubectl apply -f deployment.yaml  # Ensure you have a proper Kubernetes YAML file
+        kubectl apply -f deployment.yml  # Ensure you have a proper Kubernetes YAML file
         kubectl rollout restart deployment my-website
