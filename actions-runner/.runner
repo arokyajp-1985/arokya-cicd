@@ -1,9 +1,0 @@
-﻿{
-  "agentId": 2,
-  "agentName": "linux",
-  "poolId": 1,
-  "poolName": "Default",
-  "serverUrl": "https://pipelinesghubeus4.actions.githubusercontent.com/cbESz9zEB7Mwgqgx1YDkxGQiIOSwZwQ1w72uoMobKNOg5KUidS/",
-  "gitHubUrl": "https://github.com/arokyajp-1985/arokya-cicd",
-  "workFolder": "_work"
-}
