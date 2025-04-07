@@ -3,7 +3,12 @@ kind: Deployment
 metadata:
   name: my-website
 spec:
-  replicas: 1
+  replicas: 2  # Minimum 2 pods for zero downtime
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0         # Ensure at least one pod is always running
+      maxSurge: 1               # Allow one extra pod temporarily during updates
   selector:
     matchLabels:
       app: my-website
@@ -16,7 +21,19 @@ spec:
       - name: my-website
         image: arokyajp/arokya-cicd:latest
         ports:
-        - containerPort: 80
+        - containerPort: 8080
+        readinessProbe:         # Ensure traffic is sent only to ready pods
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        livenessProbe:          # Restart pod if unresponsive
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
 
 ---
 
@@ -29,6 +46,6 @@ spec:
     app: my-website
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 80
-  type: NodePort
+      port: 80           # Clients access the service on this port
+      targetPort: 8080   # Internally redirects to containerPort
+  type: NodePort         # Exposes service on a port on each Node
