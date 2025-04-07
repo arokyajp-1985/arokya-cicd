@@ -37,3 +37,7 @@ jobs:
       run: |
         kubectl apply -f deployment.yml  # Ensure you have a proper Kubernetes YAML file
         kubectl rollout restart deployment my-website
+
+    - name: Apply Ingress Config
+      run: |
+        kubectl apply -f ingress.yml
