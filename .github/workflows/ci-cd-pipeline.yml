@@ -15,13 +15,16 @@ jobs:
 
     - name: SonarCloud Scan (SAST)
       run: |
+        echo "Running SonarCloud scan"
         docker run --rm \
           -e SONAR_SCANNER_OPTS="-Dsonar.login=${{ secrets.SONAR_TOKEN }}" \
           -e SONAR_PROJECT_KEY=${{ secrets.SONAR_PROJECT_KEY }} \
           -e SONAR_ORGANIZATION=${{ secrets.SONAR_ORG }} \
           -v $(pwd):/usr/src \
-          sonarsource/sonar-scanner-cli
-
+          sonarsource/sonar-scanner-cli \
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+          -Dsonar.organization=${{ secrets.SONAR_ORG }}
+          
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
@@ -30,23 +33,28 @@ jobs:
 
     - name: Build and Push Docker Image
       run: |
+        echo "Building Docker Image"
         docker build -t arokyajp/arokya-cicd:latest .
         docker push arokyajp/arokya-cicd:latest
 
     - name: Start Minikube (if not running)
       run: |
+        echo "Checking Minikube status"
         minikube status || minikube start
 
     - name: Configure kubectl to use Minikube
       run: |
+        echo "Configuring kubectl"
         kubectl config use-context minikube
         kubectl cluster-info
 
     - name: Deploy to Minikube
       run: |
+        echo "Deploying to Minikube"
         kubectl apply -f deployment.yml  # Ensure you have a proper Kubernetes YAML file
         kubectl rollout restart deployment my-website
 
     - name: Apply Ingress Config
       run: |
+        echo "Applying Ingress configuration"
         kubectl apply -f ingress.yml
