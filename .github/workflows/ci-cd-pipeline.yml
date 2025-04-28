@@ -13,6 +13,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: SonarCloud Scan (SAST)
+      run: |
+        docker run --rm \
+          -e SONAR_SCANNER_OPTS="-Dsonar.login=${{ secrets.SONAR_TOKEN }}" \
+          -e SONAR_PROJECT_KEY=arokyajp-1985 \
+          -e SONAR_ORGANIZATION=arokya \
+          -v $(pwd):/usr/src \
+          sonarsource/sonar-scanner-cli
+
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
@@ -23,13 +32,6 @@ jobs:
       run: |
         docker build -t arokyajp/arokya-cicd:latest .
         docker push arokyajp/arokya-cicd:latest
-
-    - name: SonarCloud Scan
-      run: |
-        docker run --rm \
-          -e SONAR_SCANNER_OPTS="-Dsonar.login=${{ secrets.SONAR_TOKEN }}" \
-          -v $(pwd):/usr/src \
-          sonarsource/sonar-scanner-cli
 
     - name: Start Minikube (if not running)
       run: |
