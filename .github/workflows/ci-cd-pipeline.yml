@@ -17,8 +17,8 @@ jobs:
       run: |
         docker run --rm \
           -e SONAR_SCANNER_OPTS="-Dsonar.login=${{ secrets.SONAR_TOKEN }}" \
-          -e SONAR_PROJECT_KEY=arokyajp-1985 \
-          -e SONAR_ORGANIZATION=arokya \
+          -e SONAR_PROJECT_KEY=${{ secrets.SONAR_PROJECT_KEY }} \
+          -e SONAR_ORGANIZATION=${{ secrets.SONAR_ORG }} \
           -v $(pwd):/usr/src \
           sonarsource/sonar-scanner-cli
 
