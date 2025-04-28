@@ -10,34 +10,62 @@ jobs:
     runs-on: self-hosted  # Uses the self-hosted runner on your local machine
 
     steps:
+    # Checkout code
     - name: Checkout code
       uses: actions/checkout@v2
 
+    # Install SonarScanner
+    - name: Install SonarScanner
+      run: |
+        # Download and install SonarScanner
+        curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip
+        unzip sonar-scanner.zip -d /opt
+        export PATH=$PATH:/opt/sonar-scanner-4.7.0.2747-linux/bin
+        echo "SONAR_SCANNER_HOME=/opt/sonar-scanner-4.7.0.2747-linux" >> $GITHUB_ENV
+
+    # Set up SonarCloud for analysis
+    - name: Set up SonarCloud
+      uses: sonarsource/sonarcloud-github-action@v1
+      with:
+        organization: ${{ secrets.SONAR_ORG }}
+        token: ${{ secrets.SONAR_TOKEN }}
+
+    # Run SonarCloud analysis
+    - name: Run SonarCloud Scan
+      run: |
+        sonar-scanner
+
+    # Log in to Docker Hub
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
+    # Build and push Docker image
     - name: Build and Push Docker Image
       run: |
         docker build -t arokyajp/arokya-cicd:latest .
         docker push arokyajp/arokya-cicd:latest
 
+    # Start Minikube (if not running)
     - name: Start Minikube (if not running)
       run: |
         minikube status || minikube start
 
+    # Configure kubectl to use Minikube
     - name: Configure kubectl to use Minikube
       run: |
         kubectl config use-context minikube
         kubectl cluster-info
 
+    # Deploy to Minikube
     - name: Deploy to Minikube
       run: |
         kubectl apply -f deployment.yml  # Ensure you have a proper Kubernetes YAML file
         kubectl rollout restart deployment my-website
 
+    # Apply Ingress Config
     - name: Apply Ingress Config
       run: |
         kubectl apply -f ingress.yml
