@@ -7,17 +7,20 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted  # Uses the self-hosted runner on your local machine
+    runs-on: self-hosted
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Set up Git SHA for tagging
+      id: vars
+      run: echo "COMMIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
     - name: Secret Scanning with Gitleaks (SCA)
       uses: gitleaks/gitleaks-action@v2
       with:
         args: "--verbose --redact --exit-code 1"
-
 
     - name: SonarCloud Scan (SAST)
       run: |
@@ -30,7 +33,7 @@ jobs:
           sonarsource/sonar-scanner-cli \
           -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
           -Dsonar.organization=${{ secrets.SONAR_ORG }}
-          
+
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
@@ -39,14 +42,14 @@ jobs:
 
     - name: Build and Push Docker Image
       run: |
-        echo "Building Docker Image"
-        docker build -t arokyajp/arokya-cicd:latest .
-        docker push arokyajp/arokya-cicd:latest
+        echo "Building Docker image with tag: $COMMIT_SHA"
+        docker build -t arokyajp/arokya-cicd:$COMMIT_SHA .
+        docker push arokyajp/arokya-cicd:$COMMIT_SHA
 
     - name: Scan Docker image with Trivy
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: arokyajp/arokya-cicd:latest
+        image-ref: arokyajp/arokya-cicd:${{ env.COMMIT_SHA }}
         format: table
         exit-code: 0
         ignore-unfixed: true
@@ -54,22 +57,18 @@ jobs:
 
     - name: Start Minikube (if not running)
       run: |
-        echo "Checking Minikube status"
         minikube status || minikube start
 
     - name: Configure kubectl to use Minikube
       run: |
-        echo "Configuring kubectl"
         kubectl config use-context minikube
         kubectl cluster-info
 
-    - name: Deploy to Minikube
+    - name: Update Kubernetes deployment with new image
       run: |
-        echo "Deploying to Minikube"
-        kubectl apply -f deployment.yml  # Ensure you have a proper Kubernetes YAML file
-        kubectl rollout restart deployment my-website
+        kubectl set image deployment/my-website my-website=arokyajp/arokya-cicd:$COMMIT_SHA
+        kubectl rollout status deployment/my-website
 
     - name: Apply Ingress Config
       run: |
-        echo "Applying Ingress configuration"
         kubectl apply -f ingress.yml
