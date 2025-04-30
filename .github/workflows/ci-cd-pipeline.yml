@@ -13,6 +13,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Secret Scanning with Gitleaks (SCA)
+      uses: gitleaks/gitleaks-action@v2
+      with:
+        args: "--verbose --redact --exit-code 1"
+
+
     - name: SonarCloud Scan (SAST)
       run: |
         echo "Running SonarCloud scan"
