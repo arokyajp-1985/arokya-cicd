@@ -37,6 +37,15 @@ jobs:
         docker build -t arokyajp/arokya-cicd:latest .
         docker push arokyajp/arokya-cicd:latest
 
+    - name: Scan Docker image with Trivy
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: arokyajp/arokya-cicd:latest
+        format: table
+        exit-code: 0
+        ignore-unfixed: true
+        vuln-type: os,library
+
     - name: Start Minikube (if not running)
       run: |
         echo "Checking Minikube status"
