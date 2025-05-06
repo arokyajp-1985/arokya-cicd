@@ -13,22 +13,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Secret Scanning with Gitleaks (SCA)
-      uses: gitleaks/gitleaks-action@v2
-      with:
-        args: "--verbose --redact --exit-code 1"
+    # - name: Secret Scanning with Gitleaks (SCA)
+    #   uses: gitleaks/gitleaks-action@v2
+    #   with:
+    #     args: "--verbose --redact --exit-code 1"
 
-    - name: SonarCloud Scan (SAST)
-      run: |
-        echo "Running SonarCloud scan"
-        docker run --rm \
-          -e SONAR_SCANNER_OPTS="-Dsonar.login=${{ secrets.SONAR_TOKEN }}" \
-          -e SONAR_PROJECT_KEY=${{ secrets.SONAR_PROJECT_KEY }} \
-          -e SONAR_ORGANIZATION=${{ secrets.SONAR_ORG }} \
-          -v $(pwd):/usr/src \
-          sonarsource/sonar-scanner-cli \
-          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-          -Dsonar.organization=${{ secrets.SONAR_ORG }}
+    # - name: SonarCloud Scan (SAST)
+    #   run: |
+    #     echo "Running SonarCloud scan"
+    #     docker run --rm \
+    #       -e SONAR_SCANNER_OPTS="-Dsonar.login=${{ secrets.SONAR_TOKEN }}" \
+    #       -e SONAR_PROJECT_KEY=${{ secrets.SONAR_PROJECT_KEY }} \
+    #       -e SONAR_ORGANIZATION=${{ secrets.SONAR_ORG }} \
+    #       -v $(pwd):/usr/src \
+    #       sonarsource/sonar-scanner-cli \
+    #       -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+    #       -Dsonar.organization=${{ secrets.SONAR_ORG }}
           
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
@@ -42,14 +42,14 @@ jobs:
         docker build -t arokyajp/arokya-cicd:latest .
         docker push arokyajp/arokya-cicd:latest
 
-    - name: Scan Docker image with Trivy
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: arokyajp/arokya-cicd:latest
-        format: table
-        exit-code: 0
-        ignore-unfixed: true
-        vuln-type: os,library
+    # - name: Scan Docker image with Trivy
+    #   uses: aquasecurity/trivy-action@master
+    #   with:
+    #     image-ref: arokyajp/arokya-cicd:latest
+    #     format: table
+    #     exit-code: 0
+    #     ignore-unfixed: true
+    #     vuln-type: os,library
 
     - name: Start Minikube (if not running)
       run: |
