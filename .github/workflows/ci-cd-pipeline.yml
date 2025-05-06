@@ -13,10 +13,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Git SHA for tagging
-      id: vars
-      run: echo "COMMIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-
     - name: Secret Scanning with Gitleaks (SCA)
       uses: gitleaks/gitleaks-action@v2
       with:
@@ -41,15 +37,18 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Build and Push Docker Image
+      env:
+        COMMIT_SHA: ${{ github.sha }}
       run: |
-        echo "Building Docker image with tag: $COMMIT_SHA"
-        docker build -t arokyajp/arokya-cicd:$COMMIT_SHA .
+        echo "Building and tagging Docker image"
+        docker build -t arokyajp/arokya-cicd:latest -t arokyajp/arokya-cicd:$COMMIT_SHA .
+        docker push arokyajp/arokya-cicd:latest
         docker push arokyajp/arokya-cicd:$COMMIT_SHA
 
     - name: Scan Docker image with Trivy
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: arokyajp/arokya-cicd:${{ env.COMMIT_SHA }}
+        image-ref: arokyajp/arokya-cicd:${{ github.sha }}
         format: table
         exit-code: 0
         ignore-unfixed: true
@@ -57,6 +56,7 @@ jobs:
 
     - name: Start Minikube (if not running)
       run: |
+        echo "Checking Minikube status"
         minikube status || minikube start
 
     - name: Configure kubectl to use Minikube
@@ -64,8 +64,16 @@ jobs:
         kubectl config use-context minikube
         kubectl cluster-info
 
-    - name: Update Kubernetes deployment with new image
+    - name: Apply Deployment and Service YAML
       run: |
+        echo "Applying Kubernetes deployment and service"
+        kubectl apply -f deployment.yml
+
+    - name: Deploy new image by commit SHA
+      env:
+        COMMIT_SHA: ${{ github.sha }}
+      run: |
+        echo "Rolling out new image with SHA tag"
         kubectl set image deployment/my-website my-website=arokyajp/arokya-cicd:$COMMIT_SHA
         kubectl rollout status deployment/my-website
 
